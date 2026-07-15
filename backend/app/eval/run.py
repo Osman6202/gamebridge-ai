@@ -19,29 +19,23 @@ from app.ai.fixes import suggest_fixes_for
 import asyncio
 
 
-# Ground truth: which failure mode each failing test exercises, and the
-# root-cause keyword we expect the diagnosis to surface.
+# Ground truth: for each FAILING test, the root-cause keyword we expect the
+# diagnosis to surface. Tests that return 200 despite a failure_mode are treated
+# as passing (the mock can't truly fail them) and skipped for diagnosis scoring.
 EXPECTED = {
-    "Call with invalid token": "401",
-    "Call with expired token": "401",
-    "Create order with missing field": "missing",
-    "POST to GET-only endpoint": "405",
-    "Send malformed JSON": "400",
-    "Send webhook with bad signature": "signature",
-    "Replay duplicate webhook": "duplicate",
-    "Call that times out": "timeout",
-    "Send wrong content-type": "content-type",
-    "Lookup unknown SKU": "404",
-    "Create order with invalid state": "state",
-    "Call endpoint that errors": "500",
-    "Call with wrong API version": "version",
-    "Burst requests (rate limit)": "429",
-    "Endpoint returns malformed response": "malformed",
-}
-
-PASSING = {
-    "Call with valid token": "200",
-    "Create order with valid token": "200",
+    "Fetch catalog with invalid token": "invalid token",
+    "Fetch catalog with expired token": "expired",
+    "Fetch catalog with wrong api version": "api version",
+    "Fetch catalog rate limited": "rate",
+    "Fetch catalog server error": "500",
+    "Create order with missing sku": "sku",
+    "Create order with unknown sku": "unknown sku",
+    "Create order with invalid state": "order state",
+    "Create order wrong method": "405",
+    "Issue auth token missing field": "client_id",
+    "Webhook with bad signature": "signature",
+    "Webhook duplicate event": "duplicate",
+    "Create order that times out": "timeout",
 }
 
 
@@ -71,7 +65,7 @@ async def run_eval() -> dict:
         sess.refresh(tc)
         name_to_case[t["name"]] = tc.id
 
-    for name, _ in {**EXPECTED, **PASSING}.items():
+    for name, _ in {t["name"]: None for t in BUILTIN_TESTS}.items():
         defn = next((t for t in BUILTIN_TESTS if t["name"] == name), None)
         if defn is None:
             continue
