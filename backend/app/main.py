@@ -5,9 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import engine, Base
 from app.models import *  # noqa: F401,F403 — register all models
-from app.api.routes import auth, projects
+from app.api.routes import auth, projects, tests
 
-app = FastAPI(title="GameBridge AI", version="0.2.0")
+app = FastAPI(title="GameBridge AI", version="0.3.0")
 
 # CORS: frontend (Vite dev :5173, deployed Vercel) talks to this backend.
 app.add_middleware(
@@ -23,6 +23,7 @@ Base.metadata.create_all(bind=engine)
 
 app.include_router(auth.router)
 app.include_router(projects.router)
+app.include_router(tests.router)
 
 
 @app.get("/health")
