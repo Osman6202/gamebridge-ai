@@ -132,7 +132,9 @@ class VerificationRun(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     fix_id: Mapped[int] = mapped_column(ForeignKey("suggested_fixes.id"), index=True)
     test_run_id: Mapped[int] = mapped_column(ForeignKey("test_runs.id"))
-    status: Mapped[str] = mapped_column(String(20), default="unverified")  # verified | unverified
+    status: Mapped[str] = mapped_column(String(20), default="unverified")  # verified | unverified | error
+    rerun_response_status: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
     fix: Mapped["SuggestedFix"] = relationship(back_populates="verifications")

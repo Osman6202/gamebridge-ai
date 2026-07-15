@@ -1,0 +1,51 @@
+# Game Commerce API Integration Guide
+
+## Authentication
+
+Most game commerce APIs use bearer tokens. Send the token in the Authorization
+header as `Authorization: Bearer <token>`. Tokens expire; when you receive a 401
+with an expired token error, request a fresh token from the auth endpoint before
+retrying. Never log the raw token value.
+
+## Catalog Endpoint
+
+The catalog endpoint returns the list of purchasable items. A 401 means the
+request was missing or carried an invalid token. A 403 means the token is valid
+but lacks permission for this resource. Always pass `Accept: application/json`.
+
+## Orders Endpoint
+
+Create an order by POSTing a JSON body with at least a `sku` field. A 400 with
+"missing field" means the `sku` is absent. An unknown SKU returns 404. Orders
+must be idempotent: include an `idempotency_key` to avoid duplicate charges on
+retry. Wrong HTTP method (e.g. GET instead of POST) returns 405.
+
+## Webhooks
+
+Webhooks deliver asynchronous events. Verify each webhook using HMAC-SHA256 over
+the raw request body with your webhook secret, then compare using a constant-time
+check. Reject events whose signature does not match and ignore duplicates by
+tracking seen event IDs. A 200 response acknowledges; anything else triggers a
+retry with backoff.
+
+## Rate Limiting
+
+If you receive a 429, back off and retry. Respect the Retry-After header. Bursting
+requests after a 429 will extend the cooldown.
+
+## Timeouts
+
+Set a client timeout on every outbound request. A hung connection should fail
+fast rather than block the caller. Treat timeouts as transient and retry with
+backoff, but cap total attempts.
+
+## Malformed Responses
+
+If the API returns a non-JSON body on a JSON endpoint, treat it as a server fault.
+Log the raw body (redacted) and surface a clear error rather than crashing the
+parser.
+
+## Versioning
+
+APIs are versioned via a header such as `Api-Version: 2024-01-01`. Sending an
+unsupported version returns 400. Always pin a known-supported version.

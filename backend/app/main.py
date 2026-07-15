@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import engine, Base
 from app.models import *  # noqa: F401,F403 — register all models
-from app.api.routes import auth, projects, tests, webhooks
+from app.api.routes import auth, projects, tests, webhooks, docs, diagnosis, verification
 
 app = FastAPI(title="GameBridge AI", version="0.3.0")
 
@@ -25,6 +25,9 @@ app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(tests.router)
 app.include_router(webhooks.router)
+app.include_router(docs.router)
+app.include_router(diagnosis.router)
+app.include_router(verification.router)
 
 
 @app.get("/health")
