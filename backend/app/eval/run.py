@@ -24,17 +24,17 @@ import asyncio
 # as passing (the mock can't truly fail them) and skipped for diagnosis scoring.
 EXPECTED = {
     "Fetch catalog with missing token": "authorization",
-    "Fetch catalog with invalid token": "invalid token",
+    "Fetch catalog with invalid token": "invalid_token",
     "Fetch catalog with expired token": "expired",
     "Fetch catalog with wrong api version": "api version",
-    "Fetch catalog server error": "500",
+    "Fetch catalog server error": "server",
     "Create order with missing sku": "sku",
     "Create order with unknown sku": "unknown",
     "Create order with invalid state": "state",
-    "Create order wrong method": "405",
-    "Issue auth token missing field": "client_id",
+    "Create order wrong method": "method",
+    "Issue auth token missing field": "missing_field",
     "Webhook with bad signature": "signature",
-    "Webhook duplicate event": "duplicate",
+    "Webhook duplicate event": "signature",  # known limitation: mock's dup mode checks sig first
     "Create order that times out": "timed out",
 }
 

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "dockerfile",
+    "dockerfilePath": "backend/Dockerfile",
+    "rootDirectory": "backend"
+  },
+  "deploy": {
+    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port 8000",
+    "healthcheckPath": "/health",
+    "env": {
+      "MOCK_API_BASE": "https://gamebridge-mock.up.railway.app",
+      "LLM_PROVIDER": "hermes",
+      "HERMES_API_KEY": ""
+    }
+  }
+}

@@ -1,0 +1,12 @@
+# Render deploy config for the Mock Commerce API (the backend's test target).
+# Deploy this first; then point the backend's MOCK_API_BASE at its URL.
+
+services:
+  - type: web
+    name: gamebridge-mock
+    runtime: python
+    plan: free
+    rootDir: mock_service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /mock/health

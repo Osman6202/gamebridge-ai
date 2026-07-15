@@ -1,0 +1,23 @@
+# Render deploy config for the GameBridge AI backend.
+# Free web service. The AI diagnosis layer needs an LLM:
+#   - Set HERMES_API_KEY to use the Hermes local gateway (tencent/hy3:free), OR
+#   - Run Ollama on the same host (not available on Render's free tier by default).
+# Without an LLM, the non-AI features (auth, projects, test runner, tracing,
+# webhooks) work fully; diagnosis endpoints return a clear "LLM not configured" marker.
+
+services:
+  - type: web
+    name: gamebridge-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: MOCK_API_BASE
+        value: https://gamebridge-mock.onrender.com
+      - key: HERMES_API_KEY
+        sync: false   # optional: enable AI diagnosis in the cloud
+      - key: LLM_PROVIDER
+        value: hermes
