@@ -41,4 +41,10 @@ export const api = {
   runTest: (pid: number, testName: string) =>
     req("POST", `/api/v1/projects/${pid}/tests/run`, { test_name: testName }),
   listRuns: (pid: number) => req("GET", `/api/v1/projects/${pid}/test-runs`),
+  diagnose: (pid: number, runId: number) =>
+    req("POST", `/api/v1/projects/${pid}/test-runs/${runId}/diagnose`),
+  fixes: (pid: number, diagnosisId: number) =>
+    req("POST", `/api/v1/projects/${pid}/diagnoses/${diagnosisId}/fixes`),
+  verify: (pid: number, fixId: number) =>
+    req("POST", `/api/v1/projects/${pid}/fixes/${fixId}/verify`),
 };
