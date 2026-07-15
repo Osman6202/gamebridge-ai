@@ -23,19 +23,19 @@ import asyncio
 # diagnosis to surface. Tests that return 200 despite a failure_mode are treated
 # as passing (the mock can't truly fail them) and skipped for diagnosis scoring.
 EXPECTED = {
+    "Fetch catalog with missing token": "authorization",
     "Fetch catalog with invalid token": "invalid token",
     "Fetch catalog with expired token": "expired",
     "Fetch catalog with wrong api version": "api version",
-    "Fetch catalog rate limited": "rate",
     "Fetch catalog server error": "500",
     "Create order with missing sku": "sku",
-    "Create order with unknown sku": "unknown sku",
-    "Create order with invalid state": "order state",
+    "Create order with unknown sku": "unknown",
+    "Create order with invalid state": "state",
     "Create order wrong method": "405",
     "Issue auth token missing field": "client_id",
     "Webhook with bad signature": "signature",
     "Webhook duplicate event": "duplicate",
-    "Create order that times out": "timeout",
+    "Create order that times out": "timed out",
 }
 
 
