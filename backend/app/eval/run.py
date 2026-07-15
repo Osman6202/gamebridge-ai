@@ -91,15 +91,19 @@ async def run_eval() -> dict:
                               status=trace.status))
         sess.commit()
 
-        rec = {"test": name, "passed": result.passed, "expected_kw": EXPECTED.get(name, "200")}
-        if not result.passed:
+        rec = {"test": name, "passed": result.passed, "expected_kw": EXPECTED.get(name, ""),
+               "response_status": result.trace.response_status}
+        # A diagnosis target = the CLIENT call failed (non-2xx). These are the
+        # cases where an engineer would ask "why did my integration break?".
+        is_failure = result.trace.response_status is None or result.trace.response_status < 200 or result.trace.response_status >= 300
+        if is_failure:
             try:
                 diag = await diagnose_test_run(sess, tr.id, cfg)
                 rec["diagnosis_id"] = diag.id
                 rec["root_cause"] = diag.root_cause
                 rec["confidence"] = diag.confidence
                 kw = EXPECTED.get(name, "")
-                rec["hit"] = (kw.lower() in (diag.root_cause or "").lower())
+                rec["hit"] = bool(kw) and (kw.lower() in (diag.root_cause or "").lower())
                 try:
                     fixes = await suggest_fixes_for(sess, diag.id, cfg)
                     rec["fixes"] = len(fixes)
@@ -107,16 +111,18 @@ async def run_eval() -> dict:
                     rec["fixes"] = 0
             except Exception as e:
                 rec["error"] = str(e)
+        else:
+            rec["note"] = "call succeeded (2xx) — not a diagnosis target"
         rows.append(rec)
 
-    failing = [r for r in rows if not r.get("passed")]
-    hits = [r for r in failing if r.get("hit")]
+    diagnosis_targets = [r for r in rows if r.get("root_cause")]
+    hits = [r for r in diagnosis_targets if r.get("hit")]
     summary = {
         "total_tests": len(rows),
-        "failing": len(failing),
+        "diagnosis_targets": len(diagnosis_targets),
         "diagnosis_hits": len(hits),
-        "diagnosis_accuracy": round(len(hits) / max(len(failing), 1), 2),
-        "avg_confidence": round(sum(r.get("confidence", 0) for r in failing) / max(len(failing), 1), 2),
+        "diagnosis_accuracy": round(len(hits) / max(len(diagnosis_targets), 1), 2),
+        "avg_confidence": round(sum(r.get("confidence", 0) for r in diagnosis_targets) / max(len(diagnosis_targets), 1), 2),
         "rows": rows,
     }
     return summary
@@ -124,10 +130,12 @@ async def run_eval() -> dict:
 
 if __name__ == "__main__":
     out = asyncio.run(run_eval())
-    print(f"Tests: {out['total_tests']} | Failing: {out['failing']} | "
-          f"Diagnosis accuracy: {out['diagnosis_accuracy']*100:.0f}% | "
+    print(f"Tests: {out['total_tests']} | Diagnosis targets: {out['diagnosis_targets']} | "
+          f"Accuracy: {out['diagnosis_accuracy']*100:.0f}% | "
           f"Avg confidence: {out['avg_confidence']}")
     for r in out["rows"]:
-        if not r.get("passed"):
+        if r.get("root_cause"):
             tag = "OK " if r.get("hit") else "MISS"
             print(f"  [{tag}] {r['test']}: {r.get('root_cause','')[:70]} (conf {r.get('confidence',0)})")
+        else:
+            print(f"  [SKIP] {r['test']}: {r.get('note','')}")
