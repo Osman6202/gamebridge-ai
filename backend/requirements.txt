@@ -1,10 +1,11 @@
 fastapi
 uvicorn[standard]
 pydantic
+pydantic-settings
 sqlalchemy
 alembic
 python-jose[cryptography]
-passlib[bcrypt]
+bcrypt
 httpx
 pytest
 pytest-asyncio
